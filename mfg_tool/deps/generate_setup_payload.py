@@ -55,6 +55,10 @@ QRCODE_DISCOVERY_CAP_BITMASK_LEN = 8
 QRCODE_PADDING_LEN = 4
 QRCODE_VERSION = 0
 QRCODE_PADDING = 0
+# SERIAL_NUMBER_LEN = 16
+# TLV_TAG_LEN = 2
+# TLV_LENGTH_LEN = 2
+# TLV_SERIAL_NUMBER_TAG = 0x00
 
 INVALID_PASSCODES = [00000000, 11111111, 22222222, 33333333, 44444444, 55555555,
                      66666666, 77777777, 88888888, 99999999, 12345678, 87654321]
@@ -67,7 +71,7 @@ class CommissioningFlow(enum.IntEnum):
 
 
 class SetupPayload:
-    def __init__(self, discriminator, pincode, rendezvous=4, flow=CommissioningFlow.Standard, vid=0, pid=0):
+    def __init__(self, discriminator, pincode, rendezvous=4, flow=CommissioningFlow.Standard, vid=0, pid=0, serialNumber=None):
         self.long_discriminator = discriminator
         self.short_discriminator = discriminator >> 8
         self.pincode = pincode
@@ -75,6 +79,8 @@ class SetupPayload:
         self.flow = flow
         self.vid = vid
         self.pid = pid
+        self.serialNumber = serialNumber
+        
 
     def manual_chunk1(self):
         discriminator_shift = (MANUAL_DISCRIMINATOR_LEN - MANUAL_CHUNK1_DISCRIMINATOR_MSBITS_LEN)
@@ -116,10 +122,31 @@ class SetupPayload:
         qrcode_bit_string += '{0:b}'.format(self.vid).zfill(QRCODE_VID_LEN)
         qrcode_bit_string += '{0:b}'.format(QRCODE_VERSION).zfill(QRCODE_VERSION_LEN)
 
-        qrcode_bits = bitarray(qrcode_bit_string)
-        bytes = list(qrcode_bits.tobytes())
-        bytes.reverse()
-        return 'MT:{}'.format(Base38.encode(bytes))
+        print("qrcode_bit_string: {}".format(qrcode_bit_string))    
+        if(self.serialNumber):
+            # serial number is in hex string format, with "hex:" prefix, if not it is invalid
+            if(not self.serialNumber.startswith("hex:")):
+                print('Invalid serial number: ' + self.serialNumber)
+                sys.exit(1)
+            self.serialNumber = self.serialNumber[4:]
+            tlv_bytes = bytes.fromhex(self.serialNumber)
+            print("tlv_bytes: {}".format(tlv_bytes))
+            tlv_bits = ''.join(format(byte, '08b') for byte in tlv_bytes)
+            print("tlv_bits: {}".format(tlv_bits))
+
+            qrcode_bits = bitarray(qrcode_bit_string)
+            bytesList = list(qrcode_bits.tobytes())
+            additional_bits = bitarray(tlv_bits)
+            additional_bytesList = list(additional_bits.tobytes())
+            additional_bytesList.reverse()
+            bytesList = additional_bytesList + bytesList
+            bytesList.reverse()
+            return 'MT:{}'.format(Base38.encode(bytesList))
+        else:   
+            qrcode_bits = bitarray(qrcode_bit_string)
+            bytesList = list(qrcode_bits.tobytes())
+            bytesList.reverse()
+            return 'MT:{}'.format(Base38.encode(bytesList))
 
 
 def validate_args(args):
@@ -154,11 +181,13 @@ def main():
     parser.add_argument('-dm', '--discovery-cap-bitmask', type=any_base_int, default=4,
                                help='Commissionable device discovery capability bitmask. \
                                0:SoftAP, 1:BLE, 2:OnNetwork. Default: OnNetwork')
+    # tlvData args
+    parser.add_argument('-sn', '--tlv-serial-number', type=str, help='The serial number of the device')
     args = parser.parse_args()
     validate_args(args)
 
     payloads = SetupPayload(args.discriminator, args.passcode, args.discovery_cap_bitmask,
-                            CommissioningFlow(args.commissioning_flow), args.vendor_id, args.product_id)
+                            CommissioningFlow(args.commissioning_flow), args.vendor_id, args.product_id, args.tlv_serial_number)
     manualcode = payloads.generate_manualcode()
     qrcode = payloads.generate_qrcode()
 

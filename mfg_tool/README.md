@@ -1,6 +1,6 @@
 # Matter Manufacturing Partitions Generator Utility
 
-esp-matter-mfg-tool helps generate the Matter compatible manufacturing and
+photon-matter-mfg-tool helps generate the Matter compatible manufacturing and
 secure certificate partitions.
 
 Manufacturing partition can contain the Matter specific data as well as it
@@ -10,10 +10,10 @@ supports adding custom manufacturer specific data using csv files.
 
 ### Install using pip
 
-esp-matter-mfg-tool can be installed using package installer for Python
+photon-matter-mfg-tool can be installed using package installer for Python
 
 ```
-python3 -m pip install esp-matter-mfg-tool
+python3 -m pip install photon-matter-mfg-tool
 ```
 
 ## Configure your app
@@ -95,7 +95,7 @@ Above files are stored at `out/<vid_pid>/<UUID>`. Each device is identified with
 Common intermediate files are stored at `out/<vid_pid>/staging`.
 
 ## Usage examples
-`esp-matter-mfg-tool -h` lists the options.
+`photon-matter-mfg-tool -h` lists the options.
 
 Below commands uses the test PAI signing certificate and key, test certificate declaration present in Matter SDK, Vendor ID: 0xFFF2, and Product ID: 0x8001.
 
@@ -106,7 +106,7 @@ export MATTER_SDK_PATH=$ESP_MATTER_PATH/connectedhomeip/connectedhomeip
 
 ### Generate a factory partition
 ```
-esp-matter-mfg-tool -cn "My bulb" -v 0xFFF2 -p 0x8001 --pai \
+photon-matter-mfg-tool -cn "My bulb" -v 0xFFF2 -p 0x8001 --pai \
     -k $MATTER_SDK_PATH/credentials/test/attestation/Chip-Test-PAI-FFF2-8001-Key.pem \
     -c $MATTER_SDK_PATH/credentials/test/attestation/Chip-Test-PAI-FFF2-8001-Cert.pem \
     -cd $MATTER_SDK_PATH/credentials/test/certification-declaration/Chip-Test-CD-FFF2-8001.der
@@ -114,7 +114,7 @@ esp-matter-mfg-tool -cn "My bulb" -v 0xFFF2 -p 0x8001 --pai \
 
 #### Generate a factory partition and store DAC certificate and private key in secure cert partition [Optional argument : `--dac-in-secure-cert` and `--target`]
 ```
-esp-matter-mfg-tool -cn "My bulb" -v 0xFFF2 -p 0x8001 --pai \
+photon-matter-mfg-tool -cn "My bulb" -v 0xFFF2 -p 0x8001 --pai \
     -k $MATTER_SDK_PATH/credentials/test/attestation/Chip-Test-PAI-FFF2-8001-Key.pem \
     -c $MATTER_SDK_PATH/credentials/test/attestation/Chip-Test-PAI-FFF2-8001-Cert.pem \
     -cd $MATTER_SDK_PATH/credentials/test/certification-declaration/Chip-Test-CD-FFF2-8001.der \
@@ -124,7 +124,7 @@ esp-matter-mfg-tool -cn "My bulb" -v 0xFFF2 -p 0x8001 --pai \
 
 #### Generate a factory partition and store DAC certificate and private key in secure cert partition using DS Peripheral
 ```
-esp-matter-mfg-tool -cn "My bulb" -v 0xFFF2 -p 0x8001 --pai \
+photon-matter-mfg-tool -cn "My bulb" -v 0xFFF2 -p 0x8001 --pai \
     -k $MATTER_SDK_PATH/credentials/test/attestation/Chip-Test-PAI-FFF2-8001-Key.pem \
     -c $MATTER_SDK_PATH/credentials/test/attestation/Chip-Test-PAI-FFF2-8001-Cert.pem \
     -cd $MATTER_SDK_PATH/credentials/test/certification-declaration/Chip-Test-CD-FFF2-8001.der \
@@ -134,7 +134,7 @@ esp-matter-mfg-tool -cn "My bulb" -v 0xFFF2 -p 0x8001 --pai \
 
 #### Generate 5 factory partitions [Optional argument : `-n`]
 ```
-esp-matter-mfg-tool -n 5 -cn "My bulb" -v 0xFFF2 -p 0x8001 --pai \
+photon-matter-mfg-tool -n 5 -cn "My bulb" -v 0xFFF2 -p 0x8001 --pai \
     -k $MATTER_SDK_PATH/credentials/test/attestation/Chip-Test-PAI-FFF2-8001-Key.pem \
     -c $MATTER_SDK_PATH/credentials/test/attestation/Chip-Test-PAI-FFF2-8001-Cert.pem \
     -cd $MATTER_SDK_PATH/credentials/test/certification-declaration/Chip-Test-CD-FFF2-8001.der
@@ -142,7 +142,7 @@ esp-matter-mfg-tool -n 5 -cn "My bulb" -v 0xFFF2 -p 0x8001 --pai \
 
 #### Generate factory partition using existing DAC certificate and private key [Optional arguments : `--dac-cert` and `--dac-key`]
 ```
-esp-matter-mfg-tool -cn "My Bulb" -v 0xFFF2 -p 0x8001 --pai \
+photon-matter-mfg-tool -cn "My Bulb" -v 0xFFF2 -p 0x8001 --pai \
     -c $MATTER_SDK_PATH/credentials/test/attestation/Chip-Test-PAI-FFF2-8001-Cert.pem \
     -cd $MATTER_SDK_PATH/credentials/test/certification-declaration/Chip-Test-CD-FFF2-8001.der \
     --dac-key DAC_key.pem --dac-cert DAC_cert.pem
@@ -150,7 +150,7 @@ esp-matter-mfg-tool -cn "My Bulb" -v 0xFFF2 -p 0x8001 --pai \
 
 #### Generate factory partitions using existing Passcode, Discriminator, and rotating device ID [Optional arguments : `--passcode`, `--discriminator`, and `--rd-id-uid`]
 ```
-esp-matter-mfg-tool -cn "My bulb" -v 0xFFF2 -p 0x8001 --pai \
+photon-matter-mfg-tool -cn "My bulb" -v 0xFFF2 -p 0x8001 --pai \
     -k $MATTER_SDK_PATH/credentials/test/attestation/Chip-Test-PAI-FFF2-8001-Key.pem \
     -c $MATTER_SDK_PATH/credentials/test/attestation/Chip-Test-PAI-FFF2-8001-Cert.pem \
     -cd $MATTER_SDK_PATH/credentials/test/certification-declaration/Chip-Test-CD-FFF2-8001.der \
@@ -161,7 +161,7 @@ esp-matter-mfg-tool -cn "My bulb" -v 0xFFF2 -p 0x8001 --pai \
 
 #### Generate factory partitions with extra NVS key-values specified using csv and mcsv file [Optional arguments : `--csv` and `--mcsv`]
 ```
-esp-matter-mfg-tool -cn "My bulb" -v 0xFFF2 -p 0x8001 --pai \
+photon-matter-mfg-tool -cn "My bulb" -v 0xFFF2 -p 0x8001 --pai \
     -k $MATTER_SDK_PATH/credentials/test/attestation/Chip-Test-PAI-FFF2-8001-Key.pem \
     -c $MATTER_SDK_PATH/credentials/test/attestation/Chip-Test-PAI-FFF2-8001-Cert.pem \
     -cd $MATTER_SDK_PATH/credentials/test/certification-declaration/Chip-Test-CD-FFF2-8001.der \
@@ -173,7 +173,7 @@ Output binary contains all the chip specific key/value and key/values specified 
 
 #### Generate factory partitions without device attestation certificates and keys
 ```
-esp-matter-mfg-tool -v 0xFFF2 -p 0x8001 \
+photon-matter-mfg-tool -v 0xFFF2 -p 0x8001 \
     -cd $MATTER_SDK_PATH/credentials/test/certification-declaration/Chip-Test-CD-FFF2-8001.der
 ```
 
@@ -185,7 +185,7 @@ Below command will store attestation, commissionable data, and rotating device I
 and other data in factory partition.
 
 ```
-esp-matter-mfg-tool -v 0xFFF2 -p 0x8001 --pai \
+photon-matter-mfg-tool -v 0xFFF2 -p 0x8001 --pai \
     -k $MATTER_SDK_PATH/credentials/test/attestation/Chip-Test-PAI-FFF2-8001-Key.pem \
     -c $MATTER_SDK_PATH/credentials/test/attestation/Chip-Test-PAI-FFF2-8001-Cert.pem \
     -cd $MATTER_SDK_PATH/credentials/test/certification-declaration/Chip-Test-CD-FFF2-8001.der \
@@ -198,7 +198,7 @@ Below command will store attestation, commissionable data, and rotating device I
 and other data in factory partition. It will also program the DS peripheral with the private key.
 
 ```
-esp-matter-mfg-tool -v 0xFFF2 -p 0x8001 --pai \
+photon-matter-mfg-tool -v 0xFFF2 -p 0x8001 --pai \
     -k $MATTER_SDK_PATH/credentials/test/attestation/Chip-Test-PAI-FFF2-8001-Key.pem \
     -c $MATTER_SDK_PATH/credentials/test/attestation/Chip-Test-PAI-FFF2-8001-Cert.pem \
     -cd $MATTER_SDK_PATH/credentials/test/certification-declaration/Chip-Test-CD-FFF2-8001.der \
@@ -207,7 +207,7 @@ esp-matter-mfg-tool -v 0xFFF2 -p 0x8001 --pai \
 ```
 
 ## Flashing the manufacturing binary
-Please note that `esp-matter-mfg-tool` only generates manufacturing binary images which need to be flashed onto device using `esptool.py`.
+Please note that `photon-matter-mfg-tool` only generates manufacturing binary images which need to be flashed onto device using `esptool.py`.
 
 * Flashing a binary image to the device
 ```

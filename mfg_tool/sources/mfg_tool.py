@@ -51,7 +51,7 @@ from cert_utils import (
 )
 from matter_secure_cert import MatterSecureCert
 
-# In order to made the esp-matter-mfg-tool standalone we copied few dependencies from esp-idf
+# In order to made the photon-matter-mfg-tool standalone we copied few dependencies from esp-idf
 # and connectedhomeip to deps/ directory.
 # TODO: Remove the dependencies from deps/ once available on pypi
 from deps.spake2p import generate_verifier
@@ -95,13 +95,13 @@ def generate_passcodes(args):
     with open(OUT_FILE['pin_csv'], 'w', newline='') as f:
         writer = csv.writer(f)
         if args.enable_dynamic_passcode:
-            writer.writerow(["Index", "Iteration Count", "Salt"])
+            writer.writerow(["Index", "Iteration Count", "Salt", "Serial Number"])
         else:
-            writer.writerow(["Index", "PIN Code", "Iteration Count", "Salt", "Verifier"])
+            writer.writerow(["Index", "PIN Code", "Iteration Count", "Salt", "Verifier", "Serial Number"])
         for i in range(0, args.count):
             salt = os.urandom(salt_len_max)
             if args.enable_dynamic_passcode:
-                writer.writerow([i, iter_count_max, base64.b64encode(salt).decode('utf-8')])
+                writer.writerow([i, iter_count_max, base64.b64encode(salt).decode('utf-8'), generate_serial_number(args)])
             else:
                 if args.passcode:
                     passcode = args.passcode
@@ -110,7 +110,7 @@ def generate_passcodes(args):
                     if passcode in INVALID_PASSCODES:
                         passcode -= 1
                 verifier = generate_verifier(passcode, salt, iter_count_max)
-                writer.writerow([i, passcode, iter_count_max, base64.b64encode(salt).decode('utf-8'), base64.b64encode(verifier).decode('utf-8')])
+                writer.writerow([i, passcode, iter_count_max, base64.b64encode(salt).decode('utf-8'), base64.b64encode(verifier).decode('utf-8'), generate_serial_number(args)])
 
 
 def generate_discriminators(args):
@@ -254,7 +254,7 @@ def is_valid_uuid(uuid_str: str) -> bool:
         return False
 
 
-def setup_out_dirs(vid, pid, count, outdir, arg_dac_cert):
+def setup_out_dirs(vid, pid, count, outdir, arg_dac_cert, arg_uuid):
     OUT_DIR['top'] = os.sep.join([outdir, vid_pid_str(vid, pid)])
     OUT_DIR['stage'] = os.sep.join([outdir, vid_pid_str(vid, pid), 'staging'])
 
@@ -275,6 +275,15 @@ def setup_out_dirs(vid, pid, count, outdir, arg_dac_cert):
             UUIDs.append(subject_cn)
             os.makedirs(os.sep.join([OUT_DIR['top'], subject_cn, 'internal']), exist_ok=True)
             return
+        elif arg_uuid:
+            UUIDs.append(arg_uuid)
+            os.makedirs(os.sep.join([OUT_DIR['top'], arg_uuid, 'internal']), exist_ok=True)
+            return
+        
+    elif arg_uuid:
+            UUIDs.append(arg_uuid)
+            os.makedirs(os.sep.join([OUT_DIR['top'], arg_uuid, 'internal']), exist_ok=True)
+            return
 
     # Create directories to store the generated files
     for i in range(count):
@@ -291,6 +300,20 @@ def generate_passcodes_and_discriminators(args):
     # Append discriminators to passcodes file
     append_discriminator(discriminators)
 
+
+def generate_serial_number(args):
+    if args.serial_num:
+        return args.serial_num
+    else:
+        return binascii.b2a_hex(os.urandom(SERIAL_NUMBER_LEN)).decode('utf-8')
+
+def serial_number_tlv(serial_number):
+    prefix = "hex:152c00"
+    suffix = "18"
+    serial_number_hex = serial_number.encode('utf-8').hex()
+    serial_number_len_hex = hex(len(bytes.fromhex(serial_number_hex)))[2:]
+    print("serial_number_len_hex: {}".format(prefix + serial_number_len_hex.zfill(2) + serial_number_hex + suffix))
+    return prefix + serial_number_len_hex.zfill(2) + serial_number_hex + suffix
 
 def write_cn_dac_csv_header():
     with open(OUT_FILE['cn_dac_csv'], 'a', newline='') as csv_file:
@@ -477,9 +500,7 @@ def write_per_device_unique_data(args):
                 else:
                     logging.warning("Skipping entry for device with index {} as common name is not present in the DAC certificate".format(row['Index']))
 
-            # If serial number is not passed, then generate one
-            if (args.serial_num is None):
-                chip_factory_update('serial-num', binascii.b2a_hex(os.urandom(SERIAL_NUMBER_LEN)).decode('utf-8'))
+            chip_factory_update('serial-num', row['Serial Number'])
 
             if (args.enable_rotating_device_id is True) and (args.rd_id_uid is None) and (args.rd_id_uid_in_secure_cert is False):
                 chip_factory_update('rd-id-uid', get_random_rd_id_uid_hex_str())
@@ -492,7 +513,7 @@ def write_per_device_unique_data(args):
 
             # Generate onboarding data
             if not args.enable_dynamic_passcode:
-                generate_onboarding_data(args, int(row['Index']), int(row['Discriminator']), int(row['PIN Code']))
+                generate_onboarding_data(args, int(row['Index']), int(row['Discriminator']), int(row['PIN Code']), row['Serial Number'])
 
         if args.paa or args.pai:
             logging.info("Generated CSV of Common Name and DAC: {}".format(OUT_FILE['cn_dac_csv']))
@@ -571,9 +592,17 @@ def generate_summary(args):
                         if not args.enable_dynamic_passcode:
                             pincode = row['PIN Code']
                             discriminator = row['Discriminator']
-                            payloads = SetupPayload(int(discriminator), int(pincode), args.discovery_mode,
+                            
+                            if args.serial_num_in_qrcode:
+                                serial_number = row['Serial Number']
+                                payloads = SetupPayload(int(discriminator), int(pincode), args.discovery_mode,
+                                                   CommissioningFlow(args.commissioning_flow),
+                                                   args.vendor_id, args.product_id, serial_number_tlv(serial_number))
+                            else:
+                                payloads = SetupPayload(int(discriminator), int(pincode), args.discovery_mode,
                                                    CommissioningFlow(args.commissioning_flow),
                                                    args.vendor_id, args.product_id)
+                            
                             qrcode = payloads.generate_qrcode()
                             manualcode = format_manual_code(payloads.generate_manualcode(), args.commissioning_flow)
 
@@ -604,9 +633,13 @@ def generate_partitions(suffix, size, encrypt, generate_partition_bin):
     generate(partition_args)
 
 
-def generate_onboarding_data(args, index, discriminator, passcode):
-    payloads = SetupPayload(discriminator, passcode, args.discovery_mode, CommissioningFlow(args.commissioning_flow),
-                            args.vendor_id, args.product_id)
+def generate_onboarding_data(args, index, discriminator, passcode, serial_number):
+    if args.serial_num_in_qrcode:
+        payloads = SetupPayload(discriminator, passcode, args.discovery_mode, CommissioningFlow(args.commissioning_flow),
+                                args.vendor_id, args.product_id, serial_number_tlv(serial_number))
+    else:
+        payloads = SetupPayload(discriminator, passcode, args.discovery_mode, CommissioningFlow(args.commissioning_flow),
+                                args.vendor_id, args.product_id)
     chip_qrcode = payloads.generate_qrcode()
     chip_manualcode = payloads.generate_manualcode()
     # ToDo: remove this if qrcode tool can handle the standard manual code format
@@ -627,7 +660,7 @@ def generate_onboarding_data(args, index, discriminator, passcode):
 
     # Create QR code image as mentioned in the spec
     qrcode_file = os.sep.join([OUT_DIR['top'], UUIDs[index], '{}-qrcode.png'.format(UUIDs[index])])
-    chip_qr = pyqrcode.create(chip_qrcode, version=2, error='M')
+    chip_qr = pyqrcode.create(chip_qrcode, error='M')
     chip_qr.png(qrcode_file, scale=6)
 
     logging.info('Generated onboarding data and QR Code')
@@ -640,6 +673,8 @@ def get_args():
                                      formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=50))
 
     g_gen = parser.add_argument_group('General options')
+    
+    g_gen.add_argument('-u', '--uuid', help='The UUID to use for the device. If not provided, a random UUID will be generated.')
     g_gen.add_argument('-n', '--count', type=any_base_int, default=1,
                        help='The number of manufacturing partition binaries to generate. Default is 1. \
                               If --csv and --mcsv are present, the number of lines in the mcsv file is used.')
@@ -747,6 +782,7 @@ def get_args():
 
     g_dev_inst.add_argument('--supported-modes', type=str, nargs='+', required=False,
                         help='List of supported modes, eg: mode1/label1/ep/"tagValue1\\mfgCode, tagValue2\\mfgCode"  mode2/label2/ep/"tagValue1\\mfgCode, tagValue2\\mfgCode"  mode3/label3/ep/"tagValue1\\mfgCode, tagValue2\\mfgCode"')
+    g_dev_inst.add_argument('--serial-num-in-qrcode', action='store_true', help='Store serial number in the QR code.')
 
     g_basic = parser.add_argument_group('Few more Basic clusters options')
     g_basic.add_argument('--product-label', help='Product label')
@@ -873,7 +909,7 @@ def main_internal(args):
     logging.basicConfig(format='[%(asctime)s] [%(levelname)7s] - %(message)s', level=__LOG_LEVELS__[args.log_level])
     validate_args(args)
     validate_certificates(args)
-    setup_out_dirs(args.vendor_id, args.product_id, args.count, args.outdir, args.dac_cert)
+    setup_out_dirs(args.vendor_id, args.product_id, args.count, args.outdir, args.dac_cert, args.uuid)
     add_optional_KVs(args)
     generate_passcodes_and_discriminators(args)
     write_csv_files()

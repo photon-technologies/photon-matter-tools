@@ -15,7 +15,7 @@
 # limitations under the License.
 
 """
-Integration test suite for esp-matter-mfg-tool
+Integration test suite for photon-matter-mfg-tool
 """
 
 import json
@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 class TestEspMatterMfgToolIntegration:
-    """Integration test class for esp-matter-mfg-tool functionality"""
+    """Integration test class for photon-matter-mfg-tool functionality"""
 
     @classmethod
     def setup_class(cls):
@@ -55,7 +55,7 @@ class TestEspMatterMfgToolIntegration:
         Validate certificates using chip-cert (skip if not available)
 
         Args:
-            parsed_output: Parsed output of the esp-matter-mfg-tool command
+            parsed_output: Parsed output of the photon-matter-mfg-tool command
 
         Returns:
             None
@@ -79,7 +79,7 @@ class TestEspMatterMfgToolIntegration:
         Validate that no binary partition files are generated
 
         Args:
-            output: Output of the esp-matter-mfg-tool command
+            output: Output of the photon-matter-mfg-tool command
 
         Returns:
             None
@@ -92,7 +92,7 @@ class TestEspMatterMfgToolIntegration:
         Validate that secure cert partition files are generated when expected
 
         Args:
-            parsed_output: Parsed output of the esp-matter-mfg-tool command
+            parsed_output: Parsed output of the photon-matter-mfg-tool command
             should_exist: Whether secure cert partition files should exist
 
         Returns:
@@ -112,7 +112,7 @@ class TestEspMatterMfgToolIntegration:
         Validate that output paths match DAC certificate common names
 
         Args:
-            parsed_output: Parsed output of the esp-matter-mfg-tool command
+            parsed_output: Parsed output of the photon-matter-mfg-tool command
             present: Whether the DAC certificate common name should be present in the output path
 
         Returns:
@@ -132,7 +132,7 @@ class TestEspMatterMfgToolIntegration:
         Validate command output based on config flags
 
         Args:
-            output: Output of the esp-matter-mfg-tool command
+            output: Output of the photon-matter-mfg-tool command
             config: Configuration for the test case
 
         Returns:
@@ -232,7 +232,7 @@ class TestEspMatterMfgToolIntegration:
         logger.info(f"Test {test_num} passed successfully")
 
     def test_esp_matter_mfg_tool_parametrized(self):
-        """Run all parameterized test cases for esp-matter-mfg-tool"""
+        """Run all parameterized test cases for photon-matter-mfg-tool"""
         test_configs = self._load_test_data()
 
         for test_num, config in enumerate(test_configs, 1):
