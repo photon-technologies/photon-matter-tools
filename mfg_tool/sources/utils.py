@@ -247,7 +247,7 @@ def validate_args(args):
             or args.dac_key is not None
             or args.serial_num is not None
             or args.rd_id_uid is not None):
-        VERIFY_OR_EXIT(args.count == 1, 'Number of partitions should be 1 when discriminator or passcode or DAC or serial number or rotating device id is present')
+        VERIFY_OR_EXIT(args.count == 1, f'Number of partitions should be 1 when discriminator or passcode or DAC or serial number or rotating device id is present {args.count}')
 
     # either --dac-in-secure-cert is acceptable or all in secure cert
     if args.commissionable_data_in_secure_cert or args.rd_id_uid_in_secure_cert:

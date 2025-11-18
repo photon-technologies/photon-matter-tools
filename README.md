@@ -16,5 +16,5 @@ is the official Matter development framework for ESP32 series SoCs
 
 ## Tools
 
-* [esp-matter-mfg-tool](mfg_tool): tool to generate the Matter compatible manufacturing and secure certificate partitions.
+* [photon-matter-mfg-tool](mfg_tool): tool to generate the Matter compatible manufacturing and secure certificate partitions.
 

@@ -79,7 +79,7 @@ class Config:
 
 @dataclass
 class ParsedOutput:
-    """Parsed output of the esp-matter-mfg-tool command"""
+    """Parsed output of the photon-matter-mfg-tool command"""
 
     out_path: str = ""
     dac_cert: str = ""
@@ -98,7 +98,7 @@ def run_command(command):
 
 
 def parse_mfg_tool_output(output: str) -> List[ParsedOutput]:
-    """Parse the output of the esp-matter-mfg-tool command"""
+    """Parse the output of the photon-matter-mfg-tool command"""
 
     def get_uuid_from_path(path: str) -> str:
         import os

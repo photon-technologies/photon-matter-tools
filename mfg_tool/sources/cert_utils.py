@@ -670,7 +670,7 @@ def validate_certificates(args):
         VERIFY_OR_EXIT(verify_certificate_private_key(args.dac_cert, args.dac_key), "DAC certificate and private key do not match")
         VERIFY_OR_EXIT(validate_certificate_chain(args.dac_cert, args.cert), "DAC certificate chain is not valid")
 
-    if (args.valid_from or args.lifetime) and args.cert:
+    if (args.valid_from and args.lifetime) and args.cert:
         VERIFY_OR_EXIT(validate_certificate_validity(args.valid_from, args.lifetime, args.cert),
                       f"{'PAA' if args.paa else 'PAI'} Certificate validity period is outside the specified parameters (from: {args.valid_from}, lifetime: {args.lifetime} days)")
         if args.dac_cert:
