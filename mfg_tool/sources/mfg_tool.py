@@ -622,10 +622,10 @@ def generate_summary(args):
         logging.info("Generated CSV of Common Name and DAC: {}".format(OUT_FILE['cn_dac_csv']))
 
 
-def generate_partitions(suffix, size, encrypt, generate_partition_bin):
+def generate_partitions(suffix, size, encrypt, generate_partition_bin, inputkey=None):
     partition_args = SimpleNamespace(fileid = None,
                                      version = 2,
-                                     inputkey = None,
+                                     inputkey = inputkey,
                                      outdir = OUT_DIR['top'],
                                      conf = OUT_FILE['config_csv'],
                                      values = OUT_FILE['mcsv'],
@@ -633,10 +633,15 @@ def generate_partitions(suffix, size, encrypt, generate_partition_bin):
                                      prefix = suffix,
                                      generate_bin = generate_partition_bin)
     if encrypt:
-        partition_args.keygen = True
+        # If user provides encryption key, use it; otherwise generate new keys
+        if inputkey:
+            partition_args.keygen = False
+        else:
+            partition_args.keygen = True
     else:
         partition_args.keygen = False
     partition_args.key_protect_hmac = False
+    partition_args.keyfile = None  # Let mfg_gen use default naming
 
     output_buf = io.StringIO()
     output_stream = sys.stderr if logging.getLogger().level <= logging.DEBUG else output_buf
@@ -701,6 +706,8 @@ def get_args():
                        help='The size of manufacturing partition binaries to generate. Default is 0x6000.')
     g_gen.add_argument('-e', '--encrypt', action='store_true', required=False,
                       help='Encrypt the factory parititon NVS binary')
+    g_gen.add_argument('--encr-key', dest='inputkey', default=None,
+                      help='File containing encryption keys (for user-provided keys)')
     g_gen.add_argument('--log-level', default='info', choices=__LOG_LEVELS__.keys(),
                       help='Set the log level (default: %(default)s)')
     g_gen.add_argument('--outdir', default=os.path.join(os.getcwd(), 'out'),
@@ -932,7 +939,8 @@ def main_internal(args):
     if args.paa or args.pai:
         setup_root_certs(args)
     write_per_device_unique_data(args)
-    generate_partitions('matter_partition', args.size, args.encrypt, args.generate_bin)
+    generate_partitions('matter_partition', args.size, args.encrypt, args.generate_bin, 
+                       args.inputkey)
     organize_output_files('matter_partition', args)
     generate_summary(args)
 
